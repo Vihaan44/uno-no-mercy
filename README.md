@@ -12,15 +12,23 @@ A GitHub Pages-friendly UNO No Mercy game with peer-to-peer multiplayer.
 
 ## Rules Implemented
 
-- Number cards, Skip, Reverse, Draw 2, Wild, and Wild Draw 4
-- No Mercy cards: Wild Draw 6, Wild Discard All, Wild Draw Until Color, Wild Swap Hands, and Skip All
-- Draw stacking
+- Correct custom deck breakdown from the request
+- Number cards, Skip, Skip All, Reverse, Draw 2, Draw 4, and Discard All of Color
+- Wild Reverse Draw 4, Wild Draw 6, Wild Draw 10, and Color Roulette
+- 0 passes all hands in turn direction
+- 7 swaps hands with a chosen player
+- Draw stacking by equal-or-higher draw value
+- Draw until playable when you cannot play
+- Color Roulette stacking: each roulette player chooses a color, then the next player draws face up until all chosen colors appear
+- Mercy elimination at 25 cards
 - UNO calls and callouts
-- Round scoring and first-to-500 game ending
+- No points system
 
 ## Technical Notes
 
 - Static frontend in `index.html`
+- Game logic in `app.js`
+- Styling in `styles.css`
 - PeerJS/WebRTC multiplayer, with the host browser acting as the game authority
 - Player hands are masked before state is sent to other players
 - No backend is required for the GitHub Pages version
