@@ -1,51 +1,26 @@
-# UNO No Mercy — Online Multiplayer
+# UNO No Mercy - Online Multiplayer
 
-A fully functional UNO No Mercy game running on GitHub Pages with peer-to-peer multiplayer.
+A GitHub Pages-friendly UNO No Mercy game with peer-to-peer multiplayer.
 
-🎮 **[Play Now](https://vihaan44.github.io/uno-no-mercy)**
+[Play on GitHub Pages](https://vihaan44.github.io/uno-no-mercy)
 
 ## How to Play
 
-1. **Host**: Click "Host Game", enter your name, share the 6-letter room code
-2. **Join**: Click "Join Game", enter your name and the room code
-3. Host clicks **START GAME** once everyone is in (2–10 players)
+1. Host: click "Host Game", enter your name, and share the 6-character room code.
+2. Join: click "Join Game", enter your name, and enter the room code.
+3. The host starts the game once at least 2 players are in the room.
 
-## UNO No Mercy Rules Implemented
+## Rules Implemented
 
-### Standard UNO Cards
-- Number cards (0–9) in 4 colors
-- Skip, Reverse, Draw 2
-- Wild, Wild Draw 4
+- Number cards, Skip, Reverse, Draw 2, Wild, and Wild Draw 4
+- No Mercy cards: Wild Draw 6, Wild Discard All, Wild Draw Until Color, Wild Swap Hands, and Skip All
+- Draw stacking
+- UNO calls and callouts
+- Round scoring and first-to-500 game ending
 
-### No Mercy Exclusive Cards
-| Card | Effect |
-|---|---|
-| **Wild Draw 6** | Next player draws 6 (stackable) |
-| **Wild Discard All** | Play all your cards at once, pick a color |
-| **Wild Draw Until Color** | Target player draws until they get the chosen color |
-| **Wild Swap Hands** | Swap your entire hand with any player |
-| **Skip All** | Skip every other player; you go again |
+## Technical Notes
 
-### Stacking Rules (No Mercy)
-- Draw 2 can be stacked onto Draw 2
-- Wild Draw 4 can be stacked onto Draw 2, Draw 4, or Draw 6
-- Wild Draw 6 can only be stacked onto Draw 4 or Draw 6
-- Stack accumulates until someone must draw
-
-### Calling UNO
-- Click the **UNO!** button when you have exactly 1 card
-- If you forget, other players can click **CATCH [name]!** to make you draw 2
-
-### Scoring
-- Win a round by emptying your hand
-- Score = sum of all opponents' remaining card values
-- First to **500 points** wins the game
-
-## Technical Architecture
-
-- **Frontend**: Pure HTML/CSS/JS — no build step
-- **Multiplayer**: [PeerJS](https://peerjs.com/) WebRTC peer-to-peer
-- **Game authority**: Host's browser runs all game logic
-- **Hosting**: GitHub Pages (static)
-
-No backend required. The host's browser acts as the game server.
+- Static frontend in `index.html`
+- PeerJS/WebRTC multiplayer, with the host browser acting as the game authority
+- Player hands are masked before state is sent to other players
+- No backend is required for the GitHub Pages version

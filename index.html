@@ -393,7 +393,7 @@
     <span class="no">NO</span>
     <span class="mercy">MERCY</span>
   </div>
-  <p class="tagline">The ruthless card game — online multiplayer</p>
+  <p class="tagline">The ruthless card game - online multiplayer</p>
 
   <div class="card-panel">
     <div class="tabs">
@@ -646,7 +646,7 @@ async function hostGame() {
         connections[pid] = conn;
         // Send joining client their welcome + state
         conn.send({ type: 'welcome', yourId: pid });
-        conn.send({ type: 'state', state: gameState });
+        conn.send({ type: 'state', state: stateForPlayer(pid) });
         conn.on('data', (msg) => handleHostMessage(pid, msg));
         conn.on('close', () => handleDisconnect(pid));
         conn.on('error', () => handleDisconnect(pid));
@@ -765,6 +765,17 @@ function handleClientMessage(msg) {
   }
 }
 
+function stateForPlayer(playerId) {
+  return {
+    ...gameState,
+    players: gameState.players.map(player => ({
+      ...player,
+      hand: player.id === playerId ? player.hand : [],
+      handCount: player.hand.length
+    }))
+  };
+}
+
 // ═══════════════════════════════════════════════════════════════════════
 // HOST GAME ACTIONS
 // ═══════════════════════════════════════════════════════════════════════
@@ -810,8 +821,7 @@ function hostPlayCard(pid, cardIndex, chosenColor, swapTarget) {
     return sendError(pid, 'Cannot play that card');
   }
 
-  if (card.type === 'wild' && !chosenColor &&
-    card.value !== 'wild_discard_all' && card.value !== 'wild_swap_hands')
+  if (card.type === 'wild' && !chosenColor && card.value !== 'wild_swap_hands')
     return sendError(pid, 'Must choose a color');
 
   player.hand.splice(cardIndex, 1);
@@ -1050,8 +1060,11 @@ function canStackCard(card, topCard) {
 function broadcastState() {
   myPlayerIndex = gameState.players.findIndex(p => p.id === myId);
   applyState();
-  const stateMsg = { type: 'state', state: gameState };
-  Object.values(connections).forEach(conn => { try { conn.send(stateMsg); } catch(e) {} });
+  Object.entries(connections).forEach(([pid, conn]) => {
+    try {
+      conn.send({ type: 'state', state: stateForPlayer(pid) });
+    } catch(e) {}
+  });
 }
 
 function sendTo(pid, msg) {
@@ -1113,8 +1126,8 @@ function renderGame() {
     const chip = document.createElement('div');
     chip.className = 'opponent-chip' + (isTurn ? ' current-turn' : '');
     chip.innerHTML = `
-      <span class="op-name">${escHtml(p.name)}${!p.connected ? ' 💤' : ''}</span>
-      <span class="op-cards">${p.hand.length}</span>
+      <span class="op-name">${escHtml(p.name)}${!p.connected ? ' / offline' : ''}</span>
+      <span class="op-cards">${p.handCount ?? p.hand.length}</span>
       <span class="op-score">${p.score} pts</span>
       ${hasUno ? '<span class="uno-badge">UNO!</span>' : ''}
     `;
@@ -1131,7 +1144,7 @@ function renderGame() {
   const ci = document.getElementById('color-indicator');
   ci.className = `color-indicator ${gameState.currentColor || 'wild'}`;
 
-  document.getElementById('direction-indicator').textContent = gameState.direction === 1 ? '→' : '←';
+  document.getElementById('direction-indicator').textContent = gameState.direction === 1 ? '>' : '<';
 
   // Pending draw
   const pdb = document.getElementById('pending-draw-banner');
@@ -1159,7 +1172,7 @@ function renderGame() {
   // Turn
   const ti = document.getElementById('turn-indicator');
   if (myTurn) {
-    ti.textContent = gameState.pendingDraw > 0 ? `⚠️ Draw ${gameState.pendingDraw} or stack!` : '✨ Your turn!';
+    ti.textContent = gameState.pendingDraw > 0 ? `Draw ${gameState.pendingDraw} or stack!` : 'Your turn!';
     ti.className = 'turn-indicator your-turn-glow';
   } else {
     const cp = gameState.players[gameState.currentPlayerIndex];
@@ -1201,6 +1214,10 @@ function handleCardClick(cardIndex, card, canP) {
         card.value === 'wild_draw_until_color' ? 'Draw until this color appears' : 'Pick the active color';
       document.getElementById('color-modal').classList.add('active');
     }
+  } else if (card.value === 'wild_discard_all') {
+    pendingCardIndex = cardIndex;
+    document.getElementById('color-modal-hint').textContent = 'Pick the active color';
+    document.getElementById('color-modal').classList.add('active');
   } else {
     sendPlayCard(cardIndex, null, null);
   }
@@ -1219,7 +1236,7 @@ function showSwapModal() {
     if (p.id === myId) return;
     const div = document.createElement('div');
     div.className = 'swap-option';
-    div.innerHTML = `<span class="swap-name">${escHtml(p.name)}</span><span class="swap-count">${p.hand.length} cards</span>`;
+    div.innerHTML = `<span class="swap-name">${escHtml(p.name)}</span><span class="swap-count">${p.handCount ?? p.hand.length} cards</span>`;
     div.onclick = () => {
       document.getElementById('swap-modal').classList.remove('active');
       sendPlayCard(pendingCardIndex, null, i);
