@@ -644,12 +644,11 @@ async function hostGame() {
       conn.on('open', () => {
         const pid = conn.peer;
         connections[pid] = conn;
-        // Send joining client their welcome + state
-        conn.send({ type: 'welcome', yourId: pid });
-        conn.send({ type: 'state', state: stateForPlayer(pid) });
         conn.on('data', (msg) => handleHostMessage(pid, msg));
         conn.on('close', () => handleDisconnect(pid));
         conn.on('error', () => handleDisconnect(pid));
+        conn.send({ type: 'welcome', yourId: pid });
+        conn.send({ type: 'state', state: stateForPlayer(pid) });
       });
     });
     showScreen('wait-screen');
@@ -682,16 +681,20 @@ async function joinGame() {
     setConn('yellow', 'Connecting...');
     hostConn = peer.connect('UNO-' + code, { reliable: true });
     let opened = false;
+    hostConn.on('data', (msg) => handleClientMessage(msg));
+    hostConn.on('close', () => { setConn('red', 'Disconnected'); showToast('Lost connection to host', 'callout'); });
+    hostConn.on('error', () => {
+      setError('join-error', 'Could not connect. Check room code.');
+      btn.disabled = false; btn.textContent = 'JOIN ROOM';
+    });
     hostConn.on('open', () => {
       opened = true;
       setConn('green', 'Connected');
       hostConn.send({ type: 'join', name });
-      hostConn.on('data', (msg) => handleClientMessage(msg));
-      hostConn.on('close', () => { setConn('red', 'Disconnected'); showToast('Lost connection to host', 'callout'); });
-    });
-    hostConn.on('error', () => {
-      setError('join-error', 'Could not connect. Check room code.');
-      btn.disabled = false; btn.textContent = 'JOIN ROOM';
+      setTimeout(() => {
+        const joined = gameState?.players?.some(p => p.id === myId);
+        if (!joined && hostConn?.open) hostConn.send({ type: 'join', name });
+      }, 1500);
     });
     setTimeout(() => {
       if (!opened) {
